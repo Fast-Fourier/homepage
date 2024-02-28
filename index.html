@@ -63,6 +63,7 @@
         let frameTime, maxStrokeWidth;
         let frameTimeDivider = 20;
         let oddCount = 0;
+        let nextOriginSwitch = Date.now() + 7500;
 
         function resizeHandler() {
             canvas.width = window.innerWidth;
@@ -75,6 +76,10 @@
             maxStrokeWidth = Math.sqrt(canvas.width * canvas.height / 750) | 0;
         }
         resizeHandler();
+        const origins = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+        }
         window.addEventListener('resize', resizeHandler);
         let nextRectangleTime = Date.now() + frameTime;
 
@@ -99,10 +104,8 @@
 
         function createRectangle() {
             rectangles.push({
-                originX: canvas.width / 2,
-                originY: canvas.height / 2,
-                x: canvas.width / 2,
-                y: canvas.height / 2,
+                x: origins.x,
+                y: origins.y,
                 width: 0,
                 height: 0,
                 startTime: Date.now(),
@@ -114,6 +117,12 @@
         }
 
         function update() {
+            if(nextOriginSwitch < Date.now()){
+                nextOriginSwitch = Date.now() + 7500;
+                origins.x = Math.random() * canvas.width;
+                origins.y = Math.random() * canvas.height;
+            }
+
             oddCount++;
             if(oddCount%8 === 0){
                 strokeWidth += growDirection;
