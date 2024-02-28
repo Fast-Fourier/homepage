@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FAST...</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        canvas {
+            display: block;
+            background-color: #000;
+        }
+        main{
+            mix-blend-mode: difference;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            padding: 5%;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 8.5vmin;
+            margin: 0;
+            letter-spacing: -0.4em;
+            text-shadow: 8px 8px 0 #000;
+        }
+        h2 {
+            font-size: 4vmin;
+            letter-spacing: -0.1em;
+            margin: 0;
+            padding-left: .2em;
+            line-height: .2;
+            text-shadow: 6px 6px 0 #000;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <main>
+        <h1>FAST&amp;FOURIER</h1>
+        <h2>Tech solutions for creative minds</h2>
+    </main>
+
+    <script>
+        const titleLetters = ['FAST...', '...AND...', 'FOURIER']
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.lineWidth = 2;
+        
+        const rectangles = [];
+        let growthTime = 4000;
+        let HSLColor = Math.random() * 360 | 0;
+        let strokeWidth = 2;
+        let growDirection = 1;
+        let frameTime, maxStrokeWidth;
+        let frameTimeDivider = 20;
+        let oddCount = 0;
+
+        function resizeHandler() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const qs = window.document.querySelector('h1');
+            qs.style.textOrientation = 'upright';
+            qs.style.writingMode = 'vertical-lr';
+            frameTime = Math.sqrt(canvas.width * canvas.height / frameTimeDivider);
+            maxStrokeWidth = Math.sqrt(canvas.width * canvas.height / 750) | 0;
+        }
+        resizeHandler();
+        window.addEventListener('resize', resizeHandler);
+        let nextRectangleTime = Date.now() + frameTime;
+
+        function mouseMoveHandler(e) {
+            const offsetX = e.clientX / canvas.width;
+            const offsetY = e.clientY / canvas.height;
+
+            growthTime = 2500 + 1500 * offsetX;
+            frameTimeDivider = 5 + 15 * offsetY;
+            frameTime = Math.sqrt(canvas.width * canvas.height / frameTimeDivider);
+        }
+        window.addEventListener('mousemove', mouseMoveHandler);
+
+
+        function changeTitle(i=0){
+            document.title = titleLetters[i];
+            setTimeout(() => {
+                changeTitle((i+1)%titleLetters.length);
+            }, 750);
+        }
+        changeTitle();
+
+        function createRectangle() {
+            rectangles.push({
+                originX: canvas.width / 2,
+                originY: canvas.height / 2,
+                x: canvas.width / 2,
+                y: canvas.height / 2,
+                width: 0,
+                height: 0,
+                startTime: Date.now(),
+            });
+
+            if(rectangles.length > 100) {
+                rectangles.shift();
+            }
+        }
+
+        function update() {
+            oddCount++;
+            if(oddCount%8 === 0){
+                strokeWidth += growDirection;
+                if(strokeWidth === maxStrokeWidth){
+                    growDirection = -1;
+                } else if(strokeWidth === 2){
+                    growDirection = 1;
+                }
+            }
+
+            ctx.lineWidth = strokeWidth;
+            if(Date.now() > nextRectangleTime) {
+                createRectangle();
+                nextRectangleTime = Date.now() + frameTime;
+                HSLColor++;
+                if(HSLColor > 360) {
+                    HSLColor = 0;
+                }
+                ctx.strokeStyle = `hsl(${HSLColor}, 90%, 22%)`;
+                document.body.style.color = `hsl(${HSLColor}, 90%, 22%)`;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const currentTime = Date.now();
+
+            rectangles.forEach((rectangle, i) => {
+                const timeElapsed = currentTime - rectangle.startTime;
+                const growthRatio = timeElapsed / growthTime;
+                const targetWidth = canvas.width * growthRatio;
+                const targetHeight = canvas.height * growthRatio;
+                const targetX = rectangle.x - targetWidth / 2;
+                const targetY = rectangle.y - targetHeight / 2;
+
+                ctx.strokeRect(targetX, targetY, targetWidth, targetHeight);
+            });
+
+            requestAnimationFrame(update);
+        }
+
+        requestAnimationFrame(update);
+    </script>
+</body>
+</html>
